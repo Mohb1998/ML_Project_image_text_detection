@@ -1,9 +1,11 @@
+import joblib
 import numpy as np
 import os
 import random
 import cv2
 import imutils
 import matplotlib.pyplot as plt
+from tensorflow.keras.models import load_model
 from sklearn.preprocessing import LabelBinarizer
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import (
@@ -13,18 +15,18 @@ from tensorflow.keras.layers import (
     Dropout,
     Conv2D,
 )
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
 
+epochs = 50
+batch_size = 32
+
 
 def load_data(directory, max_count):
     data = []
-    img_size = 32
-    non_chars = ["#", "$", "&", "@"]
     for i in os.listdir(directory):
-        if i in non_chars:
+        if i in ["#", "$", "&", "@"]:
             continue
         count = 0
         sub_directory = os.path.join(directory, i)
@@ -33,7 +35,7 @@ def load_data(directory, max_count):
             if count > max_count:
                 break
             img = cv2.imread(os.path.join(sub_directory, j), 0)
-            img = cv2.resize(img, (img_size, img_size))
+            img = cv2.resize(img, (32, 32))
             data.append([img, i])
     random.shuffle(data)
     return data
@@ -52,7 +54,7 @@ def preprocess_data(data, label_binarizer):
     return X, Y
 
 
-def build_model(input_shape, num_classes):
+def build_model(input_shape):
     model = Sequential()
     model.add(
         Conv2D(32, (3, 3), padding="same", activation="relu", input_shape=input_shape)
@@ -70,7 +72,7 @@ def build_model(input_shape, num_classes):
     return model
 
 
-def train_model(model, train_X, train_Y, val_X, val_Y, epochs=5, batch_size=32):
+def train_model(model, train_X, train_Y, val_X, val_Y):
     model.compile(
         loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"]
     )
@@ -125,28 +127,22 @@ def sort_contours(cnts, method="left-to-right"):
     return (cnts, boundingBoxes)
 
 
-def get_word(letter):
-    word = "".join(letter)
-    return word
-
-
-def load_image(predict_text_func):
+def load_image(model, label_binarizer):
     root = tk.Tk()
-    root.withdraw()  # Hide the main window
+    root.withdraw()
 
     file_path = filedialog.askopenfilename()
     if not file_path:
         print("No file selected.")
         return
 
-    predict_text_func(file_path)
+    predict_text(file_path, model, label_binarizer)
 
 
 def predict_text(file_path, model, label_binarizer):
-    letter, image = predict_letters(file_path, model, label_binarizer)
-    word = get_word(letter)
+    letter, _ = predict_letters(file_path, model, label_binarizer)
+    word = "".join(letter)
 
-    # Display the prediction result
     result_panel = tk.Toplevel()
     result_panel.title("Prediction Result")
     result_panel.geometry("300x150")
@@ -156,12 +152,11 @@ def predict_text(file_path, model, label_binarizer):
     )
     result_label.pack(pady=20)
 
-    # Display the image used for prediction
     img = cv2.imread(file_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img = cv2.resize(img, (200, 200))  # Resize the image
-    img = Image.fromarray(img)  # Convert to ImageTk format
-    img = ImageTk.PhotoImage(image=img)  # Create PhotoImage object
+    img = cv2.resize(img, (200, 200))
+    img = Image.fromarray(img)
+    img = ImageTk.PhotoImage(image=img)
 
     img_label = tk.Label(result_panel, image=img)
     img_label.image = img
@@ -171,40 +166,31 @@ def predict_text(file_path, model, label_binarizer):
 
 
 def main():
-    dir_train = "./input/handwritten-characters/Train/"
-    dir_val = "./input/handwritten-characters/Validation/"
-    train_data = load_data(dir_train, max_count=4000)
-    val_data = load_data(dir_val, max_count=1000)
+    dir_train = "../input/handwritten-characters/Train/"
+    dir_val = "../input/handwritten-characters/Validation/"
+    if os.path.exists("model.h5"):
+        model = load_model("model.h5")
+        LB = joblib.load("label_binarizer.pkl")
 
-    LB = LabelBinarizer()
-    train_X, train_Y = preprocess_data(train_data, LB)
-    val_X, val_Y = preprocess_data(val_data, LB)
+    else:
+        train_data = load_data(dir_train, max_count=4000)
+        val_data = load_data(dir_val, max_count=1000)
 
-    num_classes = len(set(train_Y.flatten()))
-    input_shape = train_X.shape[1:]
+        train_labels = [label for _, label in train_data]
+        LB = LabelBinarizer()
+        LB.fit(train_labels)
+        joblib.dump(LB, "label_binarizer.pkl")
 
-    model = build_model(input_shape, num_classes)
-    history = train_model(
-        model, train_X, train_Y, val_X, val_Y, epochs=10, batch_size=32
-    )
+        train_X, train_Y = preprocess_data(train_data, LB)
+        val_X, val_Y = preprocess_data(val_data, LB)
 
-    plt.plot(history.history["accuracy"])
-    plt.plot(history.history["val_accuracy"])
-    plt.title("Training Accuracy vs Validation Accuracy")
-    plt.ylabel("Accuracy")
-    plt.xlabel("Epoch")
-    plt.legend(["Train", "Validation"], loc="upper left")
-    plt.show()
+        input_shape = train_X.shape[1:]
 
-    plt.plot(history.history["loss"])
-    plt.plot(history.history["val_loss"])
-    plt.title("Training Loss vs Validation Loss")
-    plt.ylabel("Loss")
-    plt.xlabel("Epoch")
-    plt.legend(["Train", "Validation"], loc="upper left")
-    plt.show()
+        model = build_model(input_shape)
+        train_model(model, train_X, train_Y, val_X, val_Y)
+        model.save("model.h5")
 
-    load_image(lambda file_path: predict_text(file_path, model, LB))
+    load_image(model, LB)
 
 
 if __name__ == "__main__":
