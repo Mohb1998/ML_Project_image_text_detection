@@ -4,7 +4,6 @@ import os
 import random
 import cv2
 import imutils
-import matplotlib.pyplot as plt
 from tensorflow.keras.models import load_model
 from sklearn.preprocessing import LabelBinarizer
 from tensorflow.keras.models import Sequential
@@ -18,9 +17,11 @@ from tensorflow.keras.layers import (
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
+import time
 
 epochs = 50
 batch_size = 32
+prediction_time = 0
 
 
 def load_data(directory, max_count):
@@ -91,11 +92,15 @@ def predict_letters(img, model, label_binarizer):
     letters = []
     image = cv2.imread(img)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    ret, thresh1 = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY_INV)
+    _, thresh1 = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY_INV)
     dilated = cv2.dilate(thresh1, None, iterations=2)
     cnts = cv2.findContours(dilated.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
     cnts = sort_contours(cnts, method="left-to-right")[0]
+
+    global prediction_time
+    prediction_time = 0
+
     for c in cnts:
         if cv2.contourArea(c) > 10:
             (x, y, w, h) = cv2.boundingRect(c)
@@ -106,7 +111,12 @@ def predict_letters(img, model, label_binarizer):
         thresh = thresh.astype("float32") / 255.0
         thresh = np.expand_dims(thresh, axis=-1)
         thresh = thresh.reshape(1, 32, 32, 1)
+
+        start_time = time.time()
         ypred = model.predict(thresh)
+        end_time = time.time()
+        prediction_time += end_time - start_time
+
         ypred = label_binarizer.inverse_transform(ypred)
         [x] = ypred
         letters.append(x)
@@ -129,6 +139,59 @@ def sort_contours(cnts, method="left-to-right"):
 
 def load_image(model, label_binarizer):
     root = tk.Tk()
+    root.title("Welcome")
+    root.geometry("600x400")
+
+    welcome_label = tk.Label(
+        root,
+        text="Hi, welcome to our image to text program",
+        font=("Arial", 14),
+        pady=20,
+    )
+    welcome_label.pack()
+
+    next_button = tk.Button(
+        root,
+        text="Next",
+        font=("Arial", 12),
+        padx=10,
+        pady=5,
+        command=lambda: select_image_page(root, model, label_binarizer),
+    )
+    next_button.pack()
+
+    root.mainloop()
+
+
+def select_image_page(root, model, label_binarizer):
+    root.destroy()
+
+    root = tk.Tk()
+    root.title("Select Image")
+    root.geometry("600x400")
+
+    select_label = tk.Label(
+        root,
+        text="Please select the image file that you would like to convert to text",
+        font=("Arial", 14),
+        pady=20,
+    )
+    select_label.pack()
+
+    select_button = tk.Button(
+        root,
+        text="Select Image",
+        font=("Arial", 12),
+        padx=10,
+        pady=5,
+        command=lambda: load_and_predict(root, model, label_binarizer),
+    )
+    select_button.pack()
+
+    root.mainloop()
+
+
+def load_and_predict(root, model, label_binarizer):
     root.withdraw()
 
     file_path = filedialog.askopenfilename()
@@ -140,17 +203,38 @@ def load_image(model, label_binarizer):
 
 
 def predict_text(file_path, model, label_binarizer):
-    letter, _ = predict_letters(file_path, model, label_binarizer)
-    word = "".join(letter)
+    letters, _ = predict_letters(file_path, model, label_binarizer)
+    word = "".join(letters)
+
+    # Create the 'results' folder if it doesn't exist
+    if not os.path.exists("results"):
+        os.makedirs("results")
+
+    # Append the predicted text to the existing file or create a new file if it doesn't exist
+    result_file_path = os.path.join("results", "predicted_text.txt")
+    with open(result_file_path, "a") as file:
+        file.write(f"Predicted Text: {word}\n")
+        prediction_time_ms = round(prediction_time * 1000)  # Convert to milliseconds
+        file.write(f"Total Prediction Time: {prediction_time_ms} ms\n")
+        file.write("\n")  # Add a blank line for separation
 
     result_panel = tk.Toplevel()
     result_panel.title("Prediction Result")
-    result_panel.geometry("300x150")
+    result_panel.geometry("600x500")
 
     result_label = tk.Label(
-        result_panel, text=f"Predicted Text: {word}", font=("Arial", 12)
+        result_panel, text=f"Predicted Text: {word}", font=("Arial", 12), pady=20
     )
-    result_label.pack(pady=20)
+    result_label.pack()
+
+    prediction_time_ms = round(prediction_time * 1000)  # Convert to milliseconds
+    prediction_time_label = tk.Label(
+        result_panel,
+        text=f"Total Prediction Time : {prediction_time_ms} ms",
+        font=("Arial", 12),
+        pady=40,
+    )
+    prediction_time_label.pack()
 
     img = cv2.imread(file_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -161,6 +245,26 @@ def predict_text(file_path, model, label_binarizer):
     img_label = tk.Label(result_panel, image=img)
     img_label.image = img
     img_label.pack(padx=10, pady=10)
+
+    exit_button = tk.Button(
+        result_panel,
+        text="Exit",
+        font=("Arial", 12),
+        padx=10,
+        pady=5,
+        command=result_panel.destroy,
+    )
+    exit_button.pack(side="left", padx=10)
+
+    try_again_button = tk.Button(
+        result_panel,
+        text="Try Again",
+        font=("Arial", 12),
+        padx=10,
+        pady=5,
+        command=lambda: select_image_page(result_panel, model, label_binarizer),
+    )
+    try_again_button.pack(side="right", padx=10)
 
     result_panel.mainloop()
 
