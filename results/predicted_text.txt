@@ -1,0 +1,15 @@
+Predicted Text: BEWF5
+Total Prediction Time: 328 ms
+
+Predicted Text: JMMQDMCWMW
+Total Prediction Time: 1274 ms
+
+Predicted Text: MZTH1BAU1T
+Total Prediction Time: 613 ms
+
+Predicted Text: MH1LFRERR0Y
+Total Prediction Time: 597 ms
+
+Predicted Text: VALENTJNC
+Total Prediction Time: 976 ms
+

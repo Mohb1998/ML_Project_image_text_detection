@@ -69,7 +69,7 @@ def build_model(input_shape):
     model.add(Flatten())
     model.add(Dense(128, activation="relu"))
     model.add(Dropout(0.2))
-    model.add(Dense(35, activation="softmax"))
+    model.add(Dense(35, activation="softmax")) #actually gives the prediction 
     return model
 
 
@@ -105,7 +105,7 @@ def predict_letters(img, model, label_binarizer):
         if cv2.contourArea(c) > 10:
             (x, y, w, h) = cv2.boundingRect(c)
             cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        roi = gray[y : y + h, x : x + w]
+        roi = gray[y:y + h, x:x + w]
         thresh = cv2.threshold(roi, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
         thresh = cv2.resize(thresh, (32, 32), interpolation=cv2.INTER_CUBIC)
         thresh = thresh.astype("float32") / 255.0
@@ -137,7 +137,7 @@ def sort_contours(cnts, method="left-to-right"):
     return (cnts, boundingBoxes)
 
 
-def load_image(model, label_binarizer):
+def load_image(model, label_binarizer): #GUI 
     root = tk.Tk()
     root.title("Welcome")
     root.geometry("600x400")
@@ -163,7 +163,7 @@ def load_image(model, label_binarizer):
     root.mainloop()
 
 
-def select_image_page(root, model, label_binarizer):
+def select_image_page(root, model, label_binarizer): # GUI 
     root.destroy()
 
     root = tk.Tk()
@@ -191,7 +191,7 @@ def select_image_page(root, model, label_binarizer):
     root.mainloop()
 
 
-def load_and_predict(root, model, label_binarizer):
+def load_and_predict(root, model, label_binarizer): #GUI 
     root.withdraw()
 
     file_path = filedialog.askopenfilename()
@@ -272,11 +272,12 @@ def predict_text(file_path, model, label_binarizer):
 def main():
     dir_train = "./input/handwritten-characters/Train/"
     dir_val = "./input/handwritten-characters/Validation/"
-    if os.path.exists("./ML_Project_image_text_detection/model.h5"):
-        model = load_model("./ML_Project_image_text_detection/model.h5")
-        LB = joblib.load("./ML_Project_image_text_detection/label_binarizer.pkl")
+    if os.path.exists("./model.h5"): 
+        model = load_model("./model.h5")
+        LB = joblib.load("./label_binarizer.pkl")
 
     else:
+        print("not helo")
         train_data = load_data(dir_train, max_count=4000)
         val_data = load_data(dir_val, max_count=1000)
 
