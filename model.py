@@ -14,11 +14,11 @@ def create_cnn(input_shape):
             MaxPooling2D((2, 2)),
             Conv2D(128, (3, 3), activation="relu"),
             MaxPooling2D((2, 2)),
-            Dropout(0.3),
+            Dropout(0.25),
             Flatten(),
             Dense(128, activation="relu"),
-            Dropout(0.3),
-            Dense(39, activation="softmax"),
+            Dropout(0.2),
+            Dense(35, activation="softmax"),
         ]
     )
     return cnn_model
