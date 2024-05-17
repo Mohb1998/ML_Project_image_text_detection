@@ -272,9 +272,10 @@ def predict_text(file_path, model, label_binarizer):
 def main():
     dir_train = "./input/handwritten-characters/Train/"
     dir_val = "./input/handwritten-characters/Validation/"
-    if os.path.exists("./model.h5"): 
-        model = load_model("./model.h5")
-        LB = joblib.load("./label_binarizer.pkl")
+    if os.path.exists("ML_Project_image_text_detection/model.h5"): #fix 
+        print("helo")
+        model = load_model("ML_Project_image_text_detection/model.h5") #fix 
+        LB = joblib.load("ML_Project_image_text_detection/label_binarizer.pkl") #fix
 
     else:
         print("not helo")
