@@ -7,12 +7,12 @@ from gui import initialize_interface
 
 
 def main():
-    train_directory = "../input/handwritten-characters/Train/"
-    validation_directory = "../input/handwritten-characters/Validation/"
+    train_directory = "input/handwritten-characters/Train/"
+    validation_directory = "input/handwritten-characters/Validation/"
 
-    if os.path.exists("./trained_model.h5") and os.path.exists("./label_encoder.pkl"):
-        cnn_model = load_model("./trained_model.h5")
-        label_encoder = joblib.load("./label_encoder.pkl")
+    if os.path.exists("ML_Project_image_text_detection/trained_model.h5") and os.path.exists("ML_Project_image_text_detection/label_encoder.pkl"):
+        cnn_model = load_model("ML_Project_image_text_detection/trained_model.h5")
+        label_encoder = joblib.load("ML_Project_image_text_detection/label_encoder.pkl")
     else:
         train_dataset = fetch_data(train_directory)
         validation_dataset = fetch_data(validation_directory)
