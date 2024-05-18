@@ -1,26 +1,66 @@
-import PyAutoGUI
 import time
+import random
 import os
-
+import numpy as np
+#import pandas as pd
+from predict import extract_and_predict 
+import joblib
+from tensorflow.keras.models import load_model
 random.seed(42)
 
-#path = "./input/test_v2/test"
- 
-#obj = os.scandir(path=path)
+
+def compare_strings(str1, str2):
+       min_length = min(len(str1), len(str2))
+       comparisons = []
+       
+       for i in range(min_length):
+              comparisons.append(str1[i] == str2[i])
+       return comparisons
 
 
-
-# Directory containing images
 image_dir = "./input/test_v2/test"
 
 image_files = [os.path.join(image_dir, os.path.normpath(file)) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))]
 #image_files = [os.path.join(image_dir, file) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))]
 
+encoder = joblib.load("ML_Project_image_text_detection/label_encoder.pkl")
+cnn_model = load_model("ML_Project_image_text_detection/trained_model.h5")
 
-#image_files = [os.path.abspath(os.path.abspath(os.path.join(image_dir, file))) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))]
-#image_dir, 
+texts = np.array([], dtype=str) 
+times = np.array([], dtype=float) 
 
-#print(image_files)
+when_break = 20
+i = 0 
+for file in image_files:
+       result = extract_and_predict(file, cnn_model=cnn_model, encoder=encoder)
+       texts = np.append(texts, result[0])
+       times = np.append(times, result[2])
+       print(file)
+       i = i + 1
+       if (i > when_break):
+              break
+
+print(texts)
+print(times)
+
+texts_correct = np.loadtxt('./input/written_name_test_v2.csv', delimiter=",", dtype=str)
+for k in range(1,when_break+1):
+       print(texts_correct[[k]][0][1]) # texts_correct[[i]][0][1] how to get to the correct result 
+       print(sum(compare_strings(texts_correct[[k]][0][1], texts[k])))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ###### PSEUDOCODE ###### 
 
@@ -38,42 +78,5 @@ image_files = [os.path.join(image_dir, os.path.normpath(file)) for file in os.li
 # repeat 1000 times (record the changes? are there any?)\
 
 ############ ############ 
-
-
-
-
-n_times = 10  # Change this to the desired number of executions
-
-pyautogui.click(x=100, y=200)
-image_path = image_files[1]
-pyautogui.write(image_path)
-pyautogui.press('enter')
-time.sleep(1) 
-
-
-pyautogui.click(x=150, y=250)  # Change (x, y) to the coordinates of your 'again' button
-time.sleep(1) 
-
-#image_path = image_files[i % len(image_files)]  # Cycle through the images
-
-#for i in range(n_times):
-        # Press the 'next' button
- #       pyautogui.click(x=100, y=200)  # Change (x, y) to the coordinates of your 'next' button
-  #      time.sleep(1)  # Adjust sleep time as necessary
-        
-        # Select an image file
- #       image_path = image_files[i]
-        # Assuming the file selection dialog is open, type the image path and press Enter
- #       pyautogui.write(image_path)
-   #     pyautogui.press('enter')
-  #      time.sleep(1)  # Adjust sleep time as necessary
-        
-        # Get the result (assumed to happen automatically after image selection)
-        # Press the 'again' button to restart the process
-   #     pyautogui.click(x=150, y=250)  # Change (x, y) to the coordinates of your 'again' button
-   #     time.sleep(1)  # Adjust sleep time as necessary
-
-
-
 
 
