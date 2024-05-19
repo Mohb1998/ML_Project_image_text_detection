@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.preprocessing import LabelBinarizer
 
 
-def fetch_data(directory_path, limit=10000, image_size=(32, 32)):
+def fetch_data(directory_path, limit=4000, image_size=(32, 32)):
     """Fetch images and corresponding labels from the directory."""
     dataset = []
     for label in os.listdir(directory_path):

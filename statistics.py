@@ -33,14 +33,15 @@ def predict(image_files, count, cnn_model, encoder):
     return texts, times
 
 # LOADING DATA 
-image_dir = "./input/test_v2/test" # folder 
+image_dir = "./input/test_v2/test" # test folder 
+
 image_files = [os.path.join(image_dir, os.path.normpath(file)) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))] 
 encoder = joblib.load("ML_Project_image_text_detection/label_encoder.pkl")
 cnn_model = load_model("ML_Project_image_text_detection/trained_model.h5")
 texts_correct = np.loadtxt('./input/written_name_test_v2.csv', delimiter=",", dtype=str, skiprows=1)
 
 # MODELLING PART 
-count = 1000 #number of images to go thru 
+count = 10 #number of images to go thru 
 texts, times = predict(image_files, count=count, cnn_model = cnn_model, encoder = encoder)
 
 
@@ -67,8 +68,6 @@ print("Average time per letter:", np.mean(time_per_letter))
 print("Total letters correct:", sum(scores))
 print("Total letters to uncover: ", sum(lengths_c))
 print("Total letters imagined (uncorrect): ", sum(len(sublist) for sublist in letters_m))
-
-
 
 # PLOTTING AREA 
 plt.hist(time_per_letter, bins=10, edgecolor='black')
