@@ -3,7 +3,7 @@ import random
 import cv2
 import numpy as np
 from sklearn.preprocessing import LabelBinarizer
-
+random.seed(42)
 
 def fetch_data(directory_path, limit=4000, image_size=(32, 32)):
     """Fetch images and corresponding labels from the directory."""
