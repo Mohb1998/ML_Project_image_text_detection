@@ -96,25 +96,27 @@ def analysis(image_files, encoder, cnn_model, texts_correct, count, words):
 
 #image_dir = "./input/handwritten-characters/Validation/0"
 
-# WHEN USING FOR THE LETTERS 
-count  = 1000 #the maximum number of pictures it can take in a folder 
+# WHEN ANALYSING JUST THE LETTERS 
+
+count  = 5000 #the maximum number of pictures it can take in a folder 
 words = False
 main_folder_dir = "./input/handwritten-characters/Validation/" 
-main_folder = os.listdir(main_folder_dir) # list of folder names
-results = [] # into dictionary results['mean'] = mean
+main_folder = os.listdir(main_folder_dir)  #list of folder names
+results = [] 
 letters = []
 for subfolder in main_folder: 
     if subfolder in ["#", "$", "&", "@"]:
             continue
-    if subfolder in ["A"]: 
-        image_dir = os.path.join(main_folder_dir, subfolder)
-        image_files = [os.path.join(image_dir, os.path.normpath(file)) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))] #list of images inside a folder
-        texts_correct = subfolder #just for some clarity 
-        results.append(analysis(image_files = image_files, encoder = encoder, cnn_model = cnn_model, texts_correct = texts_correct, count = count, words = words))
-        letters.append(subfolder)
+    #if subfolder in ["A"]: 
+    image_dir = os.path.join(main_folder_dir, subfolder)
+    image_files = [os.path.join(image_dir, os.path.normpath(file)) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))] #list of images inside a folder
+    texts_correct = subfolder #just for some clarity 
+    results.append(analysis(image_files = image_files, encoder = encoder, cnn_model = cnn_model, texts_correct = texts_correct, count = count, words = words))
+    letters.append(subfolder)
 
 
 accuracies = [] 
+times_per_letter = []
 for i in range(0, len(results)): 
     print("----- Results for letter ", results[i]['word'], "----------")
     #print("Average time per word:", results[i]['time_mean_words'])
@@ -127,11 +129,14 @@ for i in range(0, len(results)):
     print("Unique pairs: ", results[i]['pairs_unique'], " out of ", len(results[i]['pairs']))
     print('\n')
     accuracies.append(results[i]['accuracy'])
-    plt.hist(results[i]['pairpairs'], bins = results[i]['pairs_unique'], color='blue', edgecolor='black')
-    plt.title( 'Confusion histogram')
-    plt.xlabel('Value')
-    plt.ylabel('Frequency')
-    plt.show()
+    times_per_letter.append(results[i]['time_mean_letter'])
+    if results[i]['pairs_unique'] > 1:  
+        plt.hist(results[i]['pairs'], bins = results[i]['pairs_unique'], color='blue', edgecolor='black')
+        plt.title(f'Confusion histogram - character {results[i]['word']}')
+        plt.xlabel('character pairs')
+        plt.ylabel('frequency')
+        plt.savefig(f'./ML_Project_image_text_detection/monte_carlo_results/conf_hist-{results[i]['word']}-n={results[i]['total_letters']}.png', bbox_inches="tight")
+        plt.show()
 
 
 print("Average accuracy: ", np.mean(accuracies), "%")
@@ -141,49 +146,80 @@ print(accuracies)
 plt.bar(letters, accuracies, color='blue', edgecolor='black')
 plt.title('Accuracy % per character')
 plt.xlabel('character')
-plt.ylabel('Accuracy %')
+plt.ylabel('accuracy %')
+plt.savefig(f'./ML_Project_image_text_detection/monte_carlo_results/Accuracy-chars-n=max.png', bbox_inches="tight")
+plt.show()
+
+plt.bar(letters, times_per_letter, color='blue', edgecolor='black')
+plt.title('Average time per character')
+plt.xlabel('character')
+plt.ylabel('average time %')
+plt.savefig(f'./ML_Project_image_text_detection/monte_carlo_results/Average-time-chars-n=max.png', bbox_inches="tight")
 plt.show()
 
 
+"""
+# WHEN ANALYSING WHOLE WORDS 
+image_dir = "./input/test_v2/test" # test folder 
+count  = 2
+results = [] 
+texts_correct = np.loadtxt('./input/written_name_test_v2.csv', delimiter=",", dtype=str, skiprows=1)
+image_files = [os.path.join(image_dir, os.path.normpath(file)) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))] 
+print(image_files)
+results.append(analysis(image_files = image_files, encoder = encoder, cnn_model = cnn_model, texts_correct = texts_correct, count = count, words = True))
+accuracies = [] 
+times_per_letter = []
+for i in range(0, len(results)): 
+    print("----- Results for letter ", results[i]['word'], "----------")
+    #print("Average time per word:", results[i]['time_mean_words'])
+    print("Average time per letter:", results[i]['time_mean_letter'])
+    print("Total letters correct:", results[i]['final_correct'])
+    print("Total letters to uncover: ", results[i]['total_letters'])
+    print("Total letters imagined (uncorrect): ", results[i]['total_uncorrect'])
+    print("Accuracy of this model: ", results[i]['accuracy'], "%")
+    print(results[i]['pairs']) #what gets confused the most, with repetition, so that I can do a histogram and see what happens the most 
+    print("Unique pairs: ", results[i]['pairs_unique'], " out of ", len(results[i]['pairs']))
+    print('\n')
+    accuracies.append(results[i]['accuracy'])
+    times_per_letter.append(results[i]['time_mean_letter'])
+    plt.hist(results[i]['pairpairs'], bins = results[i]['pairs_unique'], color='blue', edgecolor='black')
+    plt.title(f'Confusion histogram - letter {results[i]['word']}')
+    plt.xlabel('character pairs')
+    plt.ylabel('frequency')
+    plt.show()
+"""
 
-
-# WHEN USING THE TESTING FOLDER WITH WORDS
-#image_dir = "./input/test_v2/test" # test folder 
-#count  = 2
-#texts_correct = np.loadtxt('./input/written_name_test_v2.csv', delimiter=",", dtype=str, skiprows=1)
-#image_files = [os.path.join(image_dir, os.path.normpath(file)) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))] 
-#print(image_files)
-#analysis(image_files = image_files, encoder = encoder, cnn_model = cnn_model, texts_correct = texts_correct, count = count, words = True)
 
 # PLOTTING AREA 
-#plt.hist(time_per_letter, bins=10, color='blue')
-#plt.title('Simple Histogram - time_per_letter')
-#plt.xlabel('Value')
-#plt.ylabel('Frequency')
-#plt.show()
+"""
+plt.hist(time_per_letter, bins=10, color='blue')
+plt.title('Simple Histogram - time_per_letter')
+plt.xlabel('Value')
+plt.ylabel('Frequency')
+plt.show()
 
-#plt.hist(pairpairs, bins = pairs_unique, color='blue', edgecolor='black')
-#plt.title('Simple Histogram - what gets mistaken the most')
-#plt.xlabel('Value')
-#plt.ylabel('Frequency')
-#plt.show()
+plt.hist(pairpairs, bins = pairs_unique, color='blue', edgecolor='black')
+plt.title('Simple Histogram - what gets mistaken the most')
+plt.xlabel('Value')
+plt.ylabel('Frequency')
+plt.show()
 
-#plt.scatter(lengths_c, times, color='blue', marker='o')  
-#plt.title('Time dependency, but not correct :) ')
-#plt.xlabel('lengths_c')
-#plt.ylabel('times')
-#plt.show()
+plt.scatter(lengths_c, times, color='blue', marker='o')  
+plt.title('Time dependency, but not correct :) ')
+plt.xlabel('lengths_c')
+plt.ylabel('times')
+plt.show()
 
-#plt.scatter(lengths_m, times, color='blue', marker='o')  
-#plt.title('Time dependency')
-#plt.xlabel('lengths_m')
-#plt.ylabel('times')
-#plt.show()
+plt.scatter(lengths_m, times, color='blue', marker='o')  
+plt.title('Time dependency')
+plt.xlabel('lengths_m')
+plt.ylabel('times')
+plt.show()
+"""
 
 
 
-
-# Saving the figure.
+# Saving the figure. # nah no need, manual labor :) 
 # maybe make it automatic pls, with some organization system pls -> <- #TODO 
 #plt.savefig("output.jpg")
  
