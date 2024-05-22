@@ -95,7 +95,7 @@ count  = 100
 words = False
 main_folder_dir = "./input/handwritten-characters/Validation/" 
 main_folder = os.listdir(main_folder_dir) # list of folder names
-results = []
+results = [] # {} into dictionary results['mean'] = mean
 for subfolder in main_folder: 
     if subfolder in ["#", "$", "&", "@"]:
             continue
@@ -105,7 +105,6 @@ for subfolder in main_folder:
     time_mean_words, time_mean_letter, final_correct, total_letters, total_uncorrect, accuracy, pairs, pairs_unique = analysis(image_files = image_files, encoder = encoder, cnn_model = cnn_model, texts_correct = texts_correct, count = count, words = words)
     results.append([time_mean_words, time_mean_letter, final_correct, total_letters, total_uncorrect, accuracy, pairs, pairs_unique])
 
-print(results[1])
 
 i = 0 
 for subfolder in main_folder: 
