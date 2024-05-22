@@ -37,6 +37,7 @@ def predict(image_files, count, cnn_model, encoder):
 
 def analysis(image_files, encoder, cnn_model, texts_correct, count, words):
     texts, times = predict(image_files, count=count, cnn_model = cnn_model, encoder = encoder)
+    #print("Delka texts: ", len(texts))
 
     # computing the measurements    
     time_per_letter = []
@@ -45,10 +46,10 @@ def analysis(image_files, encoder, cnn_model, texts_correct, count, words):
     letters_m = [] #if mistaken, this is the mistake 
     lengths_c = [] #correct word lenght 
     lengths_m = [] #model word lenght 
-     
-    for k in range(0,count):
+    
+    for k in range(0,min(count,len(texts))):
         #print(texts_correct[[k]][0][1]) 
-        #print(texts[k])
+        #print("k is ", k, ", result is " ,texts[k])
 
         if words: 
             correct_word = texts_correct[[k]][0][1]
@@ -75,6 +76,7 @@ def analysis(image_files, encoder, cnn_model, texts_correct, count, words):
                 pairs.append(letters_c[l][m] + letters_m[l][m])
 
     results = {   
+        'word': correct_word,
         'time_mean_words': np.mean(times), 
         'time_mean_letter' : np.mean(time_per_letter), 
         'final_correct' : sum(scores), 
@@ -82,6 +84,7 @@ def analysis(image_files, encoder, cnn_model, texts_correct, count, words):
         'total_uncorrect' : sum(len(sublist) for sublist in letters_m), 
         'accuracy' : sum(scores)/sum(lengths_c)*100,
         'pairs' : pairs,
+        'pairpairs': pairpairs,
         'pairs_unique' : pairs_unique
     }
 
@@ -94,25 +97,26 @@ def analysis(image_files, encoder, cnn_model, texts_correct, count, words):
 #image_dir = "./input/handwritten-characters/Validation/0"
 
 # WHEN USING FOR THE LETTERS 
-count  = 1
+count  = 1000 #the maximum number of pictures it can take in a folder 
 words = False
 main_folder_dir = "./input/handwritten-characters/Validation/" 
 main_folder = os.listdir(main_folder_dir) # list of folder names
 results = [] # into dictionary results['mean'] = mean
+letters = []
 for subfolder in main_folder: 
     if subfolder in ["#", "$", "&", "@"]:
             continue
-    image_dir = os.path.join(main_folder_dir, subfolder)
-    image_files = [os.path.join(image_dir, os.path.normpath(file)) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))] 
-    texts_correct = subfolder
-    results.append(analysis(image_files = image_files, encoder = encoder, cnn_model = cnn_model, texts_correct = texts_correct, count = count, words = words))
+    if subfolder in ["A"]: 
+        image_dir = os.path.join(main_folder_dir, subfolder)
+        image_files = [os.path.join(image_dir, os.path.normpath(file)) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))] #list of images inside a folder
+        texts_correct = subfolder #just for some clarity 
+        results.append(analysis(image_files = image_files, encoder = encoder, cnn_model = cnn_model, texts_correct = texts_correct, count = count, words = words))
+        letters.append(subfolder)
 
 
-i = 0 
-for subfolder in main_folder: 
-    if subfolder in ["#", "$", "&", "@"]:
-        continue
-    print("----- Results for letter ", subfolder, "----------")
+accuracies = [] 
+for i in range(0, len(results)): 
+    print("----- Results for letter ", results[i]['word'], "----------")
     #print("Average time per word:", results[i]['time_mean_words'])
     print("Average time per letter:", results[i]['time_mean_letter'])
     print("Total letters correct:", results[i]['final_correct'])
@@ -122,7 +126,25 @@ for subfolder in main_folder:
     print(results[i]['pairs']) #what gets confused the most, with repetition, so that I can do a histogram and see what happens the most 
     print("Unique pairs: ", results[i]['pairs_unique'], " out of ", len(results[i]['pairs']))
     print('\n')
-    i+=1 
+    accuracies.append(results[i]['accuracy'])
+    plt.hist(results[i]['pairpairs'], bins = results[i]['pairs_unique'], color='blue', edgecolor='black')
+    plt.title( 'Confusion histogram')
+    plt.xlabel('Value')
+    plt.ylabel('Frequency')
+    plt.show()
+
+
+print("Average accuracy: ", np.mean(accuracies), "%")
+print(letters)
+print(accuracies)    
+
+plt.bar(letters, accuracies, color='blue', edgecolor='black')
+plt.title('Accuracy % per character')
+plt.xlabel('character')
+plt.ylabel('Accuracy %')
+plt.show()
+
+
 
 
 # WHEN USING THE TESTING FOLDER WITH WORDS
@@ -157,6 +179,8 @@ for subfolder in main_folder:
 #plt.xlabel('lengths_m')
 #plt.ylabel('times')
 #plt.show()
+
+
 
 
 # Saving the figure.
