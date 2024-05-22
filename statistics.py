@@ -73,16 +73,19 @@ def analysis(image_files, encoder, cnn_model, texts_correct, count, words):
                 elif (letters_c[l][m] + letters_m[l][m]) in pairs:
                     pairpairs.append(letters_c[l][m] + letters_m[l][m])
                 pairs.append(letters_c[l][m] + letters_m[l][m])
-                
-    time_mean_words = np.mean(times)
-    time_mean_letter = np.mean(time_per_letter)
-    final_correct = sum(scores)
-    total_letters = sum(lengths_c)
-    total_uncorrect = sum(len(sublist) for sublist in letters_m)
-    accuracy = sum(scores)/sum(lengths_c)*100 
-    
-    return time_mean_words, time_mean_letter, final_correct, total_letters, total_uncorrect, accuracy, pairs, pairs_unique
 
+    results = {   
+        'time_mean_words': np.mean(times), 
+        'time_mean_letter' : np.mean(time_per_letter), 
+        'final_correct' : sum(scores), 
+        'total_letters' : sum(lengths_c), 
+        'total_uncorrect' : sum(len(sublist) for sublist in letters_m), 
+        'accuracy' : sum(scores)/sum(lengths_c)*100,
+        'pairs' : pairs,
+        'pairs_unique' : pairs_unique
+    }
+
+    return results
 
 
 
@@ -91,19 +94,18 @@ def analysis(image_files, encoder, cnn_model, texts_correct, count, words):
 #image_dir = "./input/handwritten-characters/Validation/0"
 
 # WHEN USING FOR THE LETTERS 
-count  = 100
+count  = 1
 words = False
 main_folder_dir = "./input/handwritten-characters/Validation/" 
 main_folder = os.listdir(main_folder_dir) # list of folder names
-results = [] # {} into dictionary results['mean'] = mean
+results = [] # into dictionary results['mean'] = mean
 for subfolder in main_folder: 
     if subfolder in ["#", "$", "&", "@"]:
             continue
     image_dir = os.path.join(main_folder_dir, subfolder)
     image_files = [os.path.join(image_dir, os.path.normpath(file)) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))] 
     texts_correct = subfolder
-    time_mean_words, time_mean_letter, final_correct, total_letters, total_uncorrect, accuracy, pairs, pairs_unique = analysis(image_files = image_files, encoder = encoder, cnn_model = cnn_model, texts_correct = texts_correct, count = count, words = words)
-    results.append([time_mean_words, time_mean_letter, final_correct, total_letters, total_uncorrect, accuracy, pairs, pairs_unique])
+    results.append(analysis(image_files = image_files, encoder = encoder, cnn_model = cnn_model, texts_correct = texts_correct, count = count, words = words))
 
 
 i = 0 
@@ -111,14 +113,14 @@ for subfolder in main_folder:
     if subfolder in ["#", "$", "&", "@"]:
         continue
     print("----- Results for letter ", subfolder, "----------")
-    #print("Average time per word:", results[i][0])
-    print("Average time per letter:", results[i][1])
-    print("Total letters correct:", results[i][2])
-    print("Total letters to uncover: ", results[i][3])
-    print("Total letters imagined (uncorrect): ", results[i][4])
-    print("Accuracy of this model: ", results[i][5], "%")
-    print(results[i][6]) #what gets confused the most, with repetition, so that I can do a histogram and see what happens the most 
-    print("Unique pairs: ", results[i][7], " out of ", len(results[i][6]))
+    #print("Average time per word:", results[i]['time_mean_words'])
+    print("Average time per letter:", results[i]['time_mean_letter'])
+    print("Total letters correct:", results[i]['final_correct'])
+    print("Total letters to uncover: ", results[i]['total_letters'])
+    print("Total letters imagined (uncorrect): ", results[i]['total_uncorrect'])
+    print("Accuracy of this model: ", results[i]['accuracy'], "%")
+    print(results[i]['pairs']) #what gets confused the most, with repetition, so that I can do a histogram and see what happens the most 
+    print("Unique pairs: ", results[i]['pairs_unique'], " out of ", len(results[i]['pairs']))
     print('\n')
     i+=1 
 
