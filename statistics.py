@@ -6,6 +6,9 @@ import joblib
 import matplotlib.pyplot as plt
 from tensorflow.keras.models import load_model
 
+encoder = joblib.load("ML_Project_image_text_detection/label_encoder.pkl")
+cnn_model = load_model("ML_Project_image_text_detection/trained_model.h5")
+
 def compare_strings(right, model):
        min_length = min(len(right), len(model))
        score = [] 
@@ -32,64 +35,86 @@ def predict(image_files, count, cnn_model, encoder):
         i += 1
     return texts, times
 
+def analysis(image_files, encoder, cnn_model, texts_correct, count, words):
+    texts, times = predict(image_files, count=count, cnn_model = cnn_model, encoder = encoder)
+
+    # computing the measurements    
+    time_per_letter = []
+    scores = [] 
+    letters_c = [] #if mistaken this is what was correct    
+    letters_m = [] #if mistaken, this is the mistake 
+    lengths_c = [] #correct word lenght 
+    lengths_m = [] #model word lenght 
+     
+    for k in range(0,count):
+        #print(texts_correct[[k]][0][1]) 
+        #print(texts[k])
+
+        if words: 
+            correct_word = texts_correct[[k]][0][1]
+        else: 
+            correct_word = texts_correct
+        
+        score, correct, mistaken = compare_strings(right = correct_word, model = texts[k])
+        scores.append(score) #score per letter 1/0 values only
+        lengths_c.append(len(correct_word)) #lenght of the correct word
+        lengths_m.append(len(texts[k])) #lenght of the predicted word
+        time_per_letter.append(times[k]/lengths_m[k]) #per letter in the predicted word 
+        letters_c.append(correct) # what was correct
+        letters_m.append(mistaken) # what was the mistake 
+
+    print("Average time per word:", np.mean(times))
+    print("Average time per letter:", np.mean(time_per_letter))
+    print("Total letters correct:", sum(scores))
+    print("Total letters to uncover: ", sum(lengths_c))
+    print("Total letters imagined (uncorrect): ", sum(len(sublist) for sublist in letters_m))
+
+    print("Accuracy of this model: ", sum(scores)/sum(lengths_c)*100, "%")
+
+    pairs = []
+    pairpairs = []
+    pairs_unique = 0
+    for l in range(0, len(letters_c)):
+        for m in range(0, len(letters_c[l])):
+                if (letters_c[l][m] + letters_m[l][m]) not in pairs:
+                    pairs_unique = pairs_unique  + 1 
+                elif (letters_c[l][m] + letters_m[l][m]) in pairs:
+                    pairpairs.append(letters_c[l][m] + letters_m[l][m])
+                pairs.append(letters_c[l][m] + letters_m[l][m])
+                
+
+    print(pairs) #what gets confused the most, with repetition, so that I can do a histogram and see what happens the most      
+    print("Unique pairs: ", pairs_unique, " out of ", len(pairs))
+
+    
+
+
+
 # LOADING DATA 
+
+#image_dir = "./input/handwritten-characters/Validation/0"
+
+# WHEN USING FOR THE LETTERS 
+count  = 10
+main_folder_dir = "./input/handwritten-characters/Validation/" 
+main_folder = os.listdir(main_folder_dir) # list of folder names
+for subfolder in main_folder: 
+    if subfolder in ["#", "$", "&", "@"]:
+            continue
+    image_dir = os.path.join(main_folder_dir, subfolder)
+    image_files = [os.path.join(image_dir, os.path.normpath(file)) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))] 
+    texts_correct = subfolder
+    print(image_files[:5])
+    analysis(image_files = image_files, encoder = encoder, cnn_model = cnn_model, texts_correct = texts_correct, count = count, words = False)
+
+
+# WHEN USING THE TESTING FOLDER WITH WORDS
 #image_dir = "./input/test_v2/test" # test folder 
-
-image_dir = "./input/handwritten-characters/Validation/A"
-
-image_files = [os.path.join(image_dir, os.path.normpath(file)) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))] 
-encoder = joblib.load("ML_Project_image_text_detection/label_encoder.pkl")
-cnn_model = load_model("ML_Project_image_text_detection/trained_model.h5")
-texts_correct = np.loadtxt('./input/written_name_test_v2.csv', delimiter=",", dtype=str, skiprows=1)
-
-
-# MODELLING PART 
-count = 200 #number of images to go thru 
-texts, times = predict(image_files, count=count, cnn_model = cnn_model, encoder = encoder)
-
-# computing the measurements 
-time_per_letter = []
-scores = [] 
-letters_c = [] #if mistaken this is what was correct
-letters_m = [] #if mistaken, this is the mistake 
-lengths_c = [] #correct word lenght 
-lengths_m = [] #model word lenght 
-
-for k in range(0,count):
-       #print(texts_correct[[k]][0][1]) 
-       #print(texts[k])
-       correct_word = "A" #texts_correct[[k]][0][1]
-       score, correct, mistaken = compare_strings(right = correct_word, model = texts[k])
-       scores.append(score) #score per letter 1/0 values only
-       lengths_c.append(len(correct_word)) #lenght of the correct word
-       lengths_m.append(len(texts[k])) #lenght of the predicted word
-       time_per_letter.append(times[k]/lengths_m[k]) #per letter in the predicted word 
-       letters_c.append(correct) # what was correct
-       letters_m.append(mistaken) # what was the mistake 
-
-print("Average time per word:", np.mean(times))
-print("Average time per letter:", np.mean(time_per_letter))
-print("Total letters correct:", sum(scores))
-print("Total letters to uncover: ", sum(lengths_c))
-print("Total letters imagined (uncorrect): ", sum(len(sublist) for sublist in letters_m))
-
-print("Accuracy of this model: ", sum(scores)/sum(lengths_c)*100, "%")
-
-pairs = []
-pairpairs = []
-pairs_unique = 0
-for l in range(0, len(letters_c)):
-      for m in range(0, len(letters_c[l])):
-            if (letters_c[l][m] + letters_m[l][m]) not in pairs:
-                pairs_unique = pairs_unique  + 1 
-            elif (letters_c[l][m] + letters_m[l][m]) in pairs:
-                pairpairs.append(letters_c[l][m] + letters_m[l][m])
-            pairs.append(letters_c[l][m] + letters_m[l][m])
-            
-
-print(pairs) #what gets confused the most, with repetition, so that I can do a histogram and see what happens the most      
-print("Unique pairs: ", pairs_unique, " out of ", len(pairs))
-
+#count  = 2
+#texts_correct = np.loadtxt('./input/written_name_test_v2.csv', delimiter=",", dtype=str, skiprows=1)
+#image_files = [os.path.join(image_dir, os.path.normpath(file)) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))] 
+#print(image_files)
+#analysis(image_files = image_files, encoder = encoder, cnn_model = cnn_model, texts_correct = texts_correct, count = count, words = True)
 
 # PLOTTING AREA 
 #plt.hist(time_per_letter, bins=10, color='blue')
@@ -98,11 +123,11 @@ print("Unique pairs: ", pairs_unique, " out of ", len(pairs))
 #plt.ylabel('Frequency')
 #plt.show()
 
-plt.hist(pairpairs, bins = pairs_unique, color='blue', edgecolor='black')
-plt.title('Simple Histogram - what gets mistaken the most')
-plt.xlabel('Value')
-plt.ylabel('Frequency')
-plt.show()
+#plt.hist(pairpairs, bins = pairs_unique, color='blue', edgecolor='black')
+#plt.title('Simple Histogram - what gets mistaken the most')
+#plt.xlabel('Value')
+#plt.ylabel('Frequency')
+#plt.show()
 
 #plt.scatter(lengths_c, times, color='blue', marker='o')  
 #plt.title('Time dependency, but not correct :) ')
@@ -126,7 +151,7 @@ plt.show()
 
 
 # WHAT ELSE CAN WE MEASURE 
-# - what is confused with what = misrecognition
+# - what is confused with what = misrecognition #DONE
 # - memory usage, CPU, ... 
-# - robustness - ugly images, blurness, light, different backgrounds 
-# - different datasets too ? 
+# - robustness - ugly images, blurness, light, different backgrounds oh no 
+# - different datasets too ? oh no 
