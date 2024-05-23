@@ -15,6 +15,8 @@ def compare_strings(right, model):
        correct = []
        mistaken = []
        for i in range(min_length):
+              if right in [' ', "#", "$", "&", "@", "-"]:  #skipping white space & symbols 
+                   continue
               score.append(right[i] == model[i]) 
               if right[i] != model[i]:
                      correct.append(right[i])
@@ -50,12 +52,27 @@ def analysis(image_files, encoder, cnn_model, texts_correct, count, words):
     for k in range(0,min(count,len(texts))):
         #print(texts_correct[[k]][0][1]) 
         #print("k is ", k, ", result is " ,texts[k])
-
+        print("K",k)
+        print(len(texts_correct))
         if words: 
-            correct_word = texts_correct[[k]][0][1]
+            l = k 
+            file_name = image_files[l].split("\\")[1] #the image itself
+            while texts_correct[[l]][0][0] != file_name:
+                if l == len(texts_correct): 
+                    print("image not found")
+                    break
+                else: 
+                    l = l+1 
+                if texts_correct[[l]][0][0] == file_name:
+                    print("gotcha")
+            
+            correct_word = texts_correct[[l]][0][1]    
+
         else: 
             correct_word = texts_correct
-        
+
+        print("Correct word:", correct_word)
+        print("Estimated word:", texts[k])
         score, correct, mistaken = compare_strings(right = correct_word, model = texts[k])
         scores.append(score) #score per letter 1/0 values only
         lengths_c.append(len(correct_word)) #lenght of the correct word
@@ -98,6 +115,7 @@ def analysis(image_files, encoder, cnn_model, texts_correct, count, words):
 
 # WHEN ANALYSING JUST THE LETTERS 
 
+"""
 count  = 5000 #the maximum number of pictures it can take in a folder 
 words = False
 main_folder_dir = "./input/handwritten-characters/Validation/" 
@@ -156,38 +174,39 @@ plt.xlabel(' ')
 plt.ylabel('average time in ms')
 plt.savefig(f'./ML_Project_image_text_detection/monte_carlo_results/Average-time-chars-n=max.png', bbox_inches="tight")
 plt.show()
-
-
 """
+
+
 # WHEN ANALYSING WHOLE WORDS 
-image_dir = "./input/test_v2/test" # test folder 
-count  = 2
+image_dir = "./input/test_subset" # test folder 
+count  = 100
 results = [] 
 texts_correct = np.loadtxt('./input/written_name_test_v2.csv', delimiter=",", dtype=str, skiprows=1)
 image_files = [os.path.join(image_dir, os.path.normpath(file)) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))] 
 print(image_files)
-results.append(analysis(image_files = image_files, encoder = encoder, cnn_model = cnn_model, texts_correct = texts_correct, count = count, words = True))
+results = (analysis(image_files = image_files, encoder = encoder, cnn_model = cnn_model, texts_correct = texts_correct, count = count, words = True))
+    
 accuracies = [] 
+print(results)
 times_per_letter = []
-for i in range(0, len(results)): 
-    print("----- Results for letter ", results[i]['word'], "----------")
-    #print("Average time per word:", results[i]['time_mean_words'])
-    print("Average time per letter:", results[i]['time_mean_letter'])
-    print("Total letters correct:", results[i]['final_correct'])
-    print("Total letters to uncover: ", results[i]['total_letters'])
-    print("Total letters imagined (uncorrect): ", results[i]['total_uncorrect'])
-    print("Accuracy of this model: ", results[i]['accuracy'], "%")
-    print(results[i]['pairs']) #what gets confused the most, with repetition, so that I can do a histogram and see what happens the most 
-    print("Unique pairs: ", results[i]['pairs_unique'], " out of ", len(results[i]['pairs']))
-    print('\n')
-    accuracies.append(results[i]['accuracy'])
-    times_per_letter.append(results[i]['time_mean_letter'])
-    plt.hist(results[i]['pairpairs'], bins = results[i]['pairs_unique'], color='blue', edgecolor='black')
-    plt.title(f'Confusion histogram - letter {results[i]['word']}')
-    plt.xlabel('character pairs')
-    plt.ylabel('frequency')
-    plt.show()
-"""
+print("----- Results for words, n =", count, "----------")
+print("Average time per word:", results['time_mean_words'])
+print("Average time per letter:", results['time_mean_letter'])
+print("Total letters correct:", results['final_correct'])
+print("Total letters to uncover: ", results['total_letters'])
+print("Total letters imagined (uncorrect): ", results['total_uncorrect'])
+print("Accuracy of this model: ", results['accuracy'], "%")
+print(results['pairs']) #what gets confused the most, with repetition, so that I can do a histogram and see what happens the most 
+print("Unique pairs: ", results['pairs_unique'], " out of ", len(results['pairs']))
+print('\n')
+
+plt.hist(results['pairpairs'], bins = results['pairs_unique'], color='blue', edgecolor='black')
+plt.title(f'Confusion histogram - words, n = {count}')
+plt.xlabel('character pairs')
+plt.ylabel('frequency - 1')
+#plt.savefig(f'./ML_Project_image_text_detection/monte_carlo_results/conf_hist-{results[i]['word']}-n={results[i]['total_letters']}.png', bbox_inches="tight")
+plt.show()
+
 
 
 # PLOTTING AREA 
