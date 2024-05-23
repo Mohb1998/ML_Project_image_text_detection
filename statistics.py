@@ -179,7 +179,7 @@ plt.show()
 
 # WHEN ANALYSING WHOLE WORDS 
 image_dir = "./input/test_subset" # test folder 
-count  = 100
+count  = 50
 results = [] 
 texts_correct = np.loadtxt('./input/written_name_test_v2.csv', delimiter=",", dtype=str, skiprows=1)
 image_files = [os.path.join(image_dir, os.path.normpath(file)) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))] 
@@ -199,6 +199,7 @@ print("Accuracy of this model: ", results['accuracy'], "%")
 print(results['pairs']) #what gets confused the most, with repetition, so that I can do a histogram and see what happens the most 
 print("Unique pairs: ", results['pairs_unique'], " out of ", len(results['pairs']))
 print('\n')
+
 
 plt.hist(results['pairpairs'], bins = results['pairs_unique'], color='blue', edgecolor='black')
 plt.title(f'Confusion histogram - words, n = {count}')

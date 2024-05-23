@@ -84,7 +84,7 @@ class InterfacePage(tk.Frame):
         result_label.pack(pady=20)
 
         img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        img = cv2.resize(img, (200, 200))
+        #img = cv2.resize(img, (200, 200))
         img = Image.fromarray(img)
         self.photo_image = ImageTk.PhotoImage(img)
 
