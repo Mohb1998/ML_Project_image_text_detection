@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.preprocessing import LabelBinarizer
 random.seed(42)
 
+#Check this
 def fetch_data(directory_path, limit=4000, image_size=(32, 32)):
     """Fetch images and corresponding labels from the directory."""
     dataset = []
@@ -24,6 +25,7 @@ def fetch_data(directory_path, limit=4000, image_size=(32, 32)):
                     image = cv2.resize(image, image_size)
                     dataset.append((image, label))
     random.shuffle(dataset)
+    print("train_images.shape[1:]:", dataset.shape[1:])
     return dataset
 
 

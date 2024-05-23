@@ -4,24 +4,22 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dens
 
 def create_cnn(input_shape):
     """Construct a Convolutional Neural Network model."""
-    cnn_model = Sequential(
-        [
-            Conv2D(
-                32, (3, 3), activation="relu", padding="same", input_shape=input_shape
-            ),
-            MaxPooling2D((2, 2)),
-            Conv2D(64, (3, 3), activation="relu"),
-            MaxPooling2D((2, 2)),
-            Conv2D(128, (3, 3), activation="relu"),
-            MaxPooling2D((2, 2)),
-            Dropout(0.25),
-            Flatten(),
-            Dense(128, activation="relu"),
-            Dropout(0.2),
-            Dense(35, activation="softmax"),
-        ]
-    )
-    return cnn_model
+    model = Sequential()
+
+    model.add(Conv2D(32, (3, 3), padding = "same", activation='relu', input_shape=(32,32,1)))
+    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(Conv2D(64, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(Conv2D(128, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(Dropout(0.25))
+    
+    model.add(Flatten())
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Dense(35, activation='softmax'))
+    model.summary()
+    return model
 
 
 def compile_and_train(
@@ -30,7 +28,7 @@ def compile_and_train(
     train_labels,
     val_images,
     val_labels,
-    epochs=50,
+    epochs=16,
     batch_size=32,
 ):
     """Compile and train the CNN model."""

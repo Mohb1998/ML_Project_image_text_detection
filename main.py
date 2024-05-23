@@ -21,7 +21,9 @@ def main():
         train_images, train_labels, label_encoder = process_data(train_dataset)
         val_images, val_labels, _ = process_data(validation_dataset)
 
+        print(train_images.shape[1:]) # 32,32,1
         cnn_model = create_cnn(train_images.shape[1:])
+        #Check  this
         compile_and_train(cnn_model, train_images, train_labels, val_images, val_labels)
 
         cnn_model.save("trained_model.h5")

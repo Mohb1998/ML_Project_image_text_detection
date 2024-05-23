@@ -5,7 +5,7 @@ from imutils.contours import sort_contours
 import matplotlib.pyplot as plt
 import time
 
-
+# Check this
 def extract_and_predict(img_path, cnn_model, encoder):
     """Extract letters from the image and predict them using the trained model."""
     image = cv2.imread(img_path)
