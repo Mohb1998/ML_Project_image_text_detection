@@ -28,7 +28,7 @@ def compile_and_train(
     train_labels,
     val_images,
     val_labels,
-    epochs=16,
+    epochs=8,
     batch_size=32,
 ):
     """Compile and train the CNN model."""

@@ -9,6 +9,13 @@ from tensorflow.keras.models import load_model
 encoder = joblib.load("ML_Project_image_text_detection/label_encoder.pkl")
 cnn_model = load_model("ML_Project_image_text_detection/trained_model.h5")
 
+#encoder = joblib.load("ML_Project_image_text_detection/old_trained_models/epochs = 4, acc = 33,9/label_encoder.pkl")
+#cnn_model = load_model("ML_Project_image_text_detection/old_trained_models/epochs = 4, acc = 33,9/trained_model.h5")
+
+#encoder = joblib.load("ML_Project_image_text_detection/old_trained_models/epoch = 15, before the fix/label_encoder.pkl")
+#cnn_model = load_model("ML_Project_image_text_detection/old_trained_models/epoch = 15, before the fix/trained_model.h5")
+
+
 def compare_strings(right, model):
        min_length = min(len(right), len(model))
        score = [] 
@@ -48,12 +55,13 @@ def analysis(image_files, encoder, cnn_model, texts_correct, count, words):
     letters_m = [] #if mistaken, this is the mistake 
     lengths_c = [] #correct word lenght 
     lengths_m = [] #model word lenght 
-    
+    score_words = 0
+
     for k in range(0,min(count,len(texts))):
         #print(texts_correct[[k]][0][1]) 
         #print("k is ", k, ", result is " ,texts[k])
-        print("K",k)
-        print(len(texts_correct))
+        #print("K",k)
+        #print(len(texts_correct))
         if words: 
             l = k 
             file_name = image_files[l].split("\\")[1] #the image itself
@@ -63,16 +71,18 @@ def analysis(image_files, encoder, cnn_model, texts_correct, count, words):
                     break
                 else: 
                     l = l+1 
-                if texts_correct[[l]][0][0] == file_name:
-                    print("gotcha")
-            
             correct_word = texts_correct[[l]][0][1]    
+                #if texts_correct[[l]][0][0] == file_name:
+                    #print("gotcha")
 
         else: 
             correct_word = texts_correct
 
         print("Correct word:", correct_word)
         print("Estimated word:", texts[k])
+        
+        if (correct_word == texts[k]):
+            score_words = score_words + 1
         score, correct, mistaken = compare_strings(right = correct_word, model = texts[k])
         scores.append(score) #score per letter 1/0 values only
         lengths_c.append(len(correct_word)) #lenght of the correct word
@@ -94,6 +104,7 @@ def analysis(image_files, encoder, cnn_model, texts_correct, count, words):
 
     results = {   
         'word': correct_word,
+        'correct_words': score_words,
         'time_mean_words': np.mean(times), 
         'time_mean_letter' : np.mean(time_per_letter), 
         'final_correct' : sum(scores), 
@@ -113,10 +124,9 @@ def analysis(image_files, encoder, cnn_model, texts_correct, count, words):
 
 #image_dir = "./input/handwritten-characters/Validation/0"
 
-# WHEN ANALYSING JUST THE LETTERS 
-
-"""
-count  = 5000 #the maximum number of pictures it can take in a folder 
+# WHEN ANALYSING JUST THE LETTERS
+'''
+count  = 50 #the maximum number of pictures it can take in a folder 
 words = False
 main_folder_dir = "./input/handwritten-characters/Validation/" 
 main_folder = os.listdir(main_folder_dir)  #list of folder names
@@ -125,7 +135,7 @@ letters = []
 for subfolder in main_folder: 
     if subfolder in ["#", "$", "&", "@"]:
             continue
-    #if subfolder in ["A"]: 
+    #if subfolder in ["A", "0", "B", "C", "1", "L", "E"]: 
     image_dir = os.path.join(main_folder_dir, subfolder)
     image_files = [os.path.join(image_dir, os.path.normpath(file)) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))] #list of images inside a folder
     texts_correct = subfolder #just for some clarity 
@@ -153,7 +163,7 @@ for i in range(0, len(results)):
         plt.title(f'Confusion histogram - character {results[i]['word']}')
         plt.xlabel('character pairs')
         plt.ylabel('frequency')
-        plt.savefig(f'./ML_Project_image_text_detection/monte_carlo_results/conf_hist-{results[i]['word']}-n={results[i]['total_letters']}.png', bbox_inches="tight")
+        #plt.savefig(f'./ML_Project_image_text_detection/monte_carlo_results/conf_hist-{results[i]['word']}-n={results[i]['total_letters']}.png', bbox_inches="tight")
         plt.show()
 
 
@@ -165,33 +175,36 @@ plt.bar(letters, accuracies, color='blue', edgecolor='black')
 plt.title('Accuracy per character')
 plt.xlabel(' ')
 plt.ylabel('accuracy in %')
-plt.savefig(f'./ML_Project_image_text_detection/monte_carlo_results/Accuracy-chars-n=max.png', bbox_inches="tight")
+#plt.savefig(f'./ML_Project_image_text_detection/monte_carlo_results/Accuracy-chars-n=max.png', bbox_inches="tight")
 plt.show()
 
 plt.bar(letters, times_per_letter, color='blue', edgecolor='black')
 plt.title('Average time per character')
 plt.xlabel(' ')
 plt.ylabel('average time in ms')
-plt.savefig(f'./ML_Project_image_text_detection/monte_carlo_results/Average-time-chars-n=max.png', bbox_inches="tight")
+#plt.savefig(f'./ML_Project_image_text_detection/monte_carlo_results/Average-time-chars-n=max.png', bbox_inches="tight")
 plt.show()
-"""
+'''
 
 
 # WHEN ANALYSING WHOLE WORDS 
+
 image_dir = "./input/test_subset" # test folder 
 count  = 50
 results = [] 
 texts_correct = np.loadtxt('./input/written_name_test_v2.csv', delimiter=",", dtype=str, skiprows=1)
 image_files = [os.path.join(image_dir, os.path.normpath(file)) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))] 
-print(image_files)
+#print(image_files)
 results = (analysis(image_files = image_files, encoder = encoder, cnn_model = cnn_model, texts_correct = texts_correct, count = count, words = True))
     
 accuracies = [] 
-print(results)
+correct_words = []
+#print(results)
 times_per_letter = []
 print("----- Results for words, n =", count, "----------")
 print("Average time per word:", results['time_mean_words'])
 print("Average time per letter:", results['time_mean_letter'])
+print("Total words correct:", results['correct_words'])
 print("Total letters correct:", results['final_correct'])
 print("Total letters to uncover: ", results['total_letters'])
 print("Total letters imagined (uncorrect): ", results['total_uncorrect'])

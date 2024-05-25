@@ -12,16 +12,3 @@ Total letters imagined (uncorrect):  265
 Accuracy of this model:  16.8141592920354 %
 
 
-- words get squished 
-
-
-
------ Results for words, n = 50 ----------
-Average time per word: 0.5817326545715332
-Average time per letter: 0.08785485696173334
-Total letters correct: 57
-Total letters to uncover:  339
-Total letters imagined (uncorrect):  265
-Accuracy of this model:  16.8141592920354 %
-
-- words dont get squished 

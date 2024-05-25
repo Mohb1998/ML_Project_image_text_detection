@@ -20,12 +20,12 @@ def fetch_data(directory_path, limit=4000, image_size=(32, 32)):
                 if count > limit:
                     break
                 image_path = os.path.join(label_path, image_file)
+                print(image_path)
                 image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
                 if image is not None:
                     image = cv2.resize(image, image_size)
                     dataset.append((image, label))
     random.shuffle(dataset)
-    print("train_images.shape[1:]:", dataset.shape[1:])
     return dataset
 
 
