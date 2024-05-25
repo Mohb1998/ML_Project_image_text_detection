@@ -27,7 +27,7 @@ def extract_and_predict(img_path, cnn_model, encoder):
 
             (x, y, w, h) = cv2.boundingRect(contour) #rectangle for the contour (shape?)
 
-            # Aspect ratio filtering (long rectangles)
+            # avoiding long rectangles
             aspect_ratio = w / float(h)
             if aspect_ratio < 0.2 or aspect_ratio > 5.0:
                 continue
