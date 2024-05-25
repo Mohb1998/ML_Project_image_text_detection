@@ -5,16 +5,17 @@ from data_processing import fetch_data, process_data
 from model import create_cnn, compile_and_train
 from gui import initialize_interface
 
-
-
 def main():
     train_directory = "input/handwritten-characters/Train/"
     validation_directory = "input/handwritten-characters/Validation/"
-    
+
     if os.path.exists("ML_Project_image_text_detection/trained_model.h5") and os.path.exists("ML_Project_image_text_detection/label_encoder.pkl"):
         print("---- loading a trained model ----")
-        cnn_model = load_model("ML_Project_image_text_detection/trained_model.h5")
-        label_encoder = joblib.load("ML_Project_image_text_detection/label_encoder.pkl")
+        #cnn_model = load_model("ML_Project_image_text_detection/trained_model.h5")
+        #label_encoder = joblib.load("ML_Project_image_text_detection/label_encoder.pkl")
+        label_encoder = joblib.load("ML_Project_image_text_detection/old_trained_models/700, 300, 7 epochs, acc 38,05/label_encoder.pkl")
+        cnn_model = load_model("ML_Project_image_text_detection/old_trained_models/700, 300, 7 epochs, acc 38,05/trained_model.h5")
+
     else:
         print("---- training a new model ----")
         train_dataset = fetch_data(train_directory, limit = 700)

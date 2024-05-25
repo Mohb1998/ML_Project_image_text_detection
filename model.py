@@ -1,7 +1,6 @@
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense
 
-
 def create_cnn(input_shape):
     """Construct a Convolutional Neural Network model."""
     model = Sequential()
@@ -17,10 +16,9 @@ def create_cnn(input_shape):
     model.add(Flatten())
     model.add(Dense(128, activation='relu'))
     model.add(Dropout(0.2))
-    model.add(Dense(35, activation='softmax'))
+    model.add(Dense(26, activation='softmax'))
     model.summary()
     return model
-
 
 def compile_and_train(
     cnn_model,
@@ -28,7 +26,7 @@ def compile_and_train(
     train_labels,
     val_images,
     val_labels,
-    epochs=8,
+    epochs=7,
     batch_size=32,
 ):
     """Compile and train the CNN model."""

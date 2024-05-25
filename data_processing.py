@@ -10,7 +10,7 @@ def fetch_data(directory_path, limit=4000, image_size=(32, 32)):
     """Fetch images and corresponding labels from the directory."""
     dataset = []
     for label in os.listdir(directory_path):
-        if label in ["#", "$", "&", "@"]:
+        if label in ["#", "$", "&", "@", '1', '2', '3', '4', '5', '6', '7', '8', '9']:
             continue
         count = 0
         label_path = os.path.join(directory_path, label)

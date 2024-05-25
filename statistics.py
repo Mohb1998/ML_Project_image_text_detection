@@ -6,11 +6,11 @@ import joblib
 import matplotlib.pyplot as plt
 from tensorflow.keras.models import load_model
 
-encoder = joblib.load("ML_Project_image_text_detection/label_encoder.pkl")
-cnn_model = load_model("ML_Project_image_text_detection/trained_model.h5")
+#encoder = joblib.load("ML_Project_image_text_detection/label_encoder.pkl")
+#cnn_model = load_model("ML_Project_image_text_detection/trained_model.h5")
 
-#encoder = joblib.load("ML_Project_image_text_detection/old_trained_models/epochs = 4, acc = 33,9/label_encoder.pkl")
-#cnn_model = load_model("ML_Project_image_text_detection/old_trained_models/epochs = 4, acc = 33,9/trained_model.h5")
+encoder = joblib.load("ML_Project_image_text_detection/old_trained_models/700, 300, 7 epochs, acc 38,05/label_encoder.pkl")
+cnn_model = load_model("ML_Project_image_text_detection/old_trained_models/700, 300, 7 epochs, acc 38,05/trained_model.h5")
 
 #encoder = joblib.load("ML_Project_image_text_detection/old_trained_models/epoch = 15, before the fix/label_encoder.pkl")
 #cnn_model = load_model("ML_Project_image_text_detection/old_trained_models/epoch = 15, before the fix/trained_model.h5")
@@ -81,9 +81,10 @@ def analysis(image_files, encoder, cnn_model, texts_correct, count, words):
         print("Correct word:", correct_word)
         print("Estimated word:", texts[k])
         
-        if (correct_word == texts[k]):
-            score_words = score_words + 1
+        
         score, correct, mistaken = compare_strings(right = correct_word, model = texts[k])
+        if (correct_word == texts[k] or len(mistaken)<=2):
+            score_words = score_words + 1
         scores.append(score) #score per letter 1/0 values only
         lengths_c.append(len(correct_word)) #lenght of the correct word
         lengths_m.append(len(texts[k])) #lenght of the predicted word
@@ -115,7 +116,6 @@ def analysis(image_files, encoder, cnn_model, texts_correct, count, words):
         'pairpairs': pairpairs,
         'pairs_unique' : pairs_unique
     }
-
     return results
 
 
@@ -185,7 +185,6 @@ plt.ylabel('average time in ms')
 #plt.savefig(f'./ML_Project_image_text_detection/monte_carlo_results/Average-time-chars-n=max.png', bbox_inches="tight")
 plt.show()
 '''
-
 
 # WHEN ANALYSING WHOLE WORDS 
 
