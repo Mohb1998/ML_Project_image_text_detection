@@ -6,8 +6,15 @@ import joblib
 import matplotlib.pyplot as plt
 from tensorflow.keras.models import load_model
 
+#encoder = joblib.load("ML_Project_image_text_detection/label_encoder.pkl")
+#cnn_model = load_model("ML_Project_image_text_detection/trained_model.h5")
+
 encoder = joblib.load("ML_Project_image_text_detection/old_trained_models/700, 300, 7 epochs, acc 38,05/label_encoder.pkl")
 cnn_model = load_model("ML_Project_image_text_detection/old_trained_models/700, 300, 7 epochs, acc 38,05/trained_model.h5")
+
+#encoder = joblib.load("ML_Project_image_text_detection/old_trained_models/epoch = 15, before the fix/label_encoder.pkl")
+#cnn_model = load_model("ML_Project_image_text_detection/old_trained_models/epoch = 15, before the fix/trained_model.h5")
+
 
 def compare_strings(right, model):
        min_length = min(len(right), len(model))
@@ -16,8 +23,6 @@ def compare_strings(right, model):
        mistaken = []
        for i in range(min_length):
               if right in [' ', "#", "$", "&", "@", "-"]:  #skipping white space & symbols 
-                   continue
-              if (model[i] == '0'): #for evaluating the words only, not letters
                    continue
               score.append(right[i] == model[i]) 
               if right[i] != model[i]:
@@ -41,7 +46,7 @@ def predict(image_files, count, cnn_model, encoder):
 
 def analysis(image_files, encoder, cnn_model, texts_correct, count, words):
     texts, times = predict(image_files, count=count, cnn_model = cnn_model, encoder = encoder)
-    #print("Len texts: ", len(texts))
+    #print("Delka texts: ", len(texts))
 
     # computing the measurements    
     time_per_letter = []
@@ -117,17 +122,20 @@ def analysis(image_files, encoder, cnn_model, texts_correct, count, words):
 
 # LOADING DATA 
 
+#image_dir = "./input/handwritten-characters/Validation/0"
+
 # WHEN ANALYSING JUST THE LETTERS
 '''
-count  = 100 #the maximum number of pictures it can take in a folder 
+count  = 50 #the maximum number of pictures it can take in a folder 
 words = False
 main_folder_dir = "./input/handwritten-characters/Validation/" 
 main_folder = os.listdir(main_folder_dir)  #list of folder names
 results = [] 
 letters = []
 for subfolder in main_folder: 
-    if subfolder in ["#", "$", "&", "@", '1', '2', '3', '4', '5', '6', '7', '8', '9']: #ignore chars and numbers
+    if subfolder in ["#", "$", "&", "@"]:
             continue
+    #if subfolder in ["A", "0", "B", "C", "1", "L", "E"]: 
     image_dir = os.path.join(main_folder_dir, subfolder)
     image_files = [os.path.join(image_dir, os.path.normpath(file)) for file in os.listdir(image_dir) if os.path.isfile(os.path.join(image_dir, file))] #list of images inside a folder
     texts_correct = subfolder #just for some clarity 
@@ -155,7 +163,7 @@ for i in range(0, len(results)):
         plt.title(f'Confusion histogram - character {results[i]['word']}')
         plt.xlabel('character pairs')
         plt.ylabel('frequency')
-        plt.savefig(f'./ML_Project_image_text_detection/results/conf_hist-{results[i]['word']}-n={results[i]['total_letters']}.png', bbox_inches="tight")
+        #plt.savefig(f'./ML_Project_image_text_detection/monte_carlo_results/conf_hist-{results[i]['word']}-n={results[i]['total_letters']}.png', bbox_inches="tight")
         plt.show()
 
 
@@ -167,14 +175,14 @@ plt.bar(letters, accuracies, color='blue', edgecolor='black')
 plt.title('Accuracy per character')
 plt.xlabel(' ')
 plt.ylabel('accuracy in %')
-plt.savefig(f'./ML_Project_image_text_detection/results/Accuracy-chars-n=max.png', bbox_inches="tight")
+#plt.savefig(f'./ML_Project_image_text_detection/monte_carlo_results/Accuracy-chars-n=max.png', bbox_inches="tight")
 plt.show()
 
 plt.bar(letters, times_per_letter, color='blue', edgecolor='black')
 plt.title('Average time per character')
 plt.xlabel(' ')
 plt.ylabel('average time in ms')
-plt.savefig(f'./ML_Project_image_text_detection/results/Average-time-chars-n=max.png', bbox_inches="tight")
+#plt.savefig(f'./ML_Project_image_text_detection/monte_carlo_results/Average-time-chars-n=max.png', bbox_inches="tight")
 plt.show()
 '''
 
@@ -198,17 +206,61 @@ print("Average time per letter:", results['time_mean_letter'])
 print("Total words correct:", results['correct_words'])
 print("Total letters correct:", results['final_correct'])
 print("Total letters to uncover: ", results['total_letters'])
-print("Total letters imagined (incorrect): ", results['total_uncorrect'])
+print("Total letters imagined (uncorrect): ", results['total_uncorrect'])
 print("Accuracy of this model: ", results['accuracy'], "%")
-#print(results['pairs']) #what gets confused the most, with repetition, so that we can do a histogram and see what happens the most 
+print(results['pairs']) #what gets confused the most, with repetition, so that I can do a histogram and see what happens the most 
 print("Unique pairs: ", results['pairs_unique'], " out of ", len(results['pairs']))
 print('\n')
 
 
-plt.hist(results['pairpairs'], bins = results['pairs_unique'], color='blue', edgecolor='black') #pairspairs is pairs, but those that repeat more then once, to make the hist readable
+plt.hist(results['pairpairs'], bins = results['pairs_unique'], color='blue', edgecolor='black')
 plt.title(f'Confusion histogram - words, n = {count}')
 plt.xlabel('character pairs')
 plt.ylabel('frequency - 1')
-plt.savefig(f'./ML_Project_image_text_detection/results/conf_hist-n={results['total_letters']}.png', bbox_inches="tight")
+#plt.savefig(f'./ML_Project_image_text_detection/monte_carlo_results/conf_hist-{results[i]['word']}-n={results[i]['total_letters']}.png', bbox_inches="tight")
 plt.show()
 
+
+
+# PLOTTING AREA 
+"""
+plt.hist(time_per_letter, bins=10, color='blue')
+plt.title('Simple Histogram - time_per_letter')
+plt.xlabel('Value')
+plt.ylabel('Frequency')
+plt.show()
+
+plt.hist(pairpairs, bins = pairs_unique, color='blue', edgecolor='black')
+plt.title('Simple Histogram - what gets mistaken the most')
+plt.xlabel('Value')
+plt.ylabel('Frequency')
+plt.show()
+
+plt.scatter(lengths_c, times, color='blue', marker='o')  
+plt.title('Time dependency, but not correct :) ')
+plt.xlabel('lengths_c')
+plt.ylabel('times')
+plt.show()
+
+plt.scatter(lengths_m, times, color='blue', marker='o')  
+plt.title('Time dependency')
+plt.xlabel('lengths_m')
+plt.ylabel('times')
+plt.show()
+"""
+
+
+
+# Saving the figure. # nah no need, manual labor :) 
+# maybe make it automatic pls, with some organization system pls -> <- #TODO 
+#plt.savefig("output.jpg")
+ 
+# Saving figure by changing parameter values
+#plt.savefig("output1", bbox_inches="tight", pad_inches=0.3, transparent=True)
+
+
+# WHAT ELSE CAN WE MEASURE 
+# - what is confused with what = misrecognition #DONE
+# - memory usage, CPU, ... 
+# - robustness - ugly images, blurness, light, different backgrounds oh no 
+# - different datasets too ? oh no 

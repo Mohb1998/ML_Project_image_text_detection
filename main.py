@@ -13,8 +13,8 @@ def main():
         print("---- loading a trained model ----")
         #cnn_model = load_model("ML_Project_image_text_detection/trained_model.h5")
         #label_encoder = joblib.load("ML_Project_image_text_detection/label_encoder.pkl")
-        label_encoder = joblib.load("ML_Project_image_text_detection/old_trained_models/700, 300, 6 epochs, acc 38,93/label_encoder.pkl")
-        cnn_model = load_model("ML_Project_image_text_detection/old_trained_models/700, 300, 6 epochs, acc 38,93/trained_model.h5")
+        label_encoder = joblib.load("ML_Project_image_text_detection/old_trained_models/700, 300, 7 epochs, acc 38,05/label_encoder.pkl")
+        cnn_model = load_model("ML_Project_image_text_detection/old_trained_models/700, 300, 7 epochs, acc 38,05/trained_model.h5")
 
     else:
         print("---- training a new model ----")
